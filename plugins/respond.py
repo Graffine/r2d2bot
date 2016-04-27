@@ -44,19 +44,19 @@ LOGGING = {
 
 logging.config.dictConfig(LOGGING)
 logger = logging.getLogger(__name__)
-english_only = re.compile(u'.*[\x00-\x7F]')
+not_english_only = re.compile(u'.*[^\x00-\x7F]')
 english_hour_start = datetime.time(7)
 english_hour_end = datetime.time(8)
 
 def formatted_reply(message, reply, attachments=[]):
-    if english_hour_start < datetime.datetime.utcnow().time() < english_hour_end and \
-       english_only.match(message.body['text']):
+    if (english_hour_start < datetime.datetime.utcnow().time() < english_hour_end) and \
+       not_english_only.match(message.body['text']):
+        message.reply("there will be ~a~ indian on board this or next  month, so we need use english to talk")
+    else:
         client = message._client
         if type(reply) == list:
             reply = random.choice(reply)
         client.webapi.chat.post_message(message._body['channel'], reply, username="赵闽", icon_url=client.bot_icon, attachments=attachments)
-    else:
-        message.reply("there will be ~a~ indian on board this or next  month, so we need use english to talk")
 
 @listen_to(u"(為什麼|為何)")
 def zm_knowwhy(message, matcher):
