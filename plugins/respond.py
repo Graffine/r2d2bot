@@ -2,9 +2,12 @@
 from slackbot.bot import respond_to
 from slackbot.bot import listen_to
 import datetime
+import fcntl
 import logging
 import logging.config
 import random, re
+import socket
+import struct
 
 LOGGING = {
     'version': 1,
@@ -58,6 +61,14 @@ def formatted_reply(message, reply, attachments=[]):
             reply = random.choice(reply)
         client.webapi.chat.post_message(message._body['channel'], reply, username="赵闽", icon_url=client.bot_icon, attachments=attachments)
 
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15])
+    )[20:24])
+
 @listen_to(u"(為什麼|為何)")
 def zm_knowwhy(message, matcher):
     reply = "因為淡水阿嬤一句話"
@@ -109,6 +120,11 @@ def zm_thank_you(message, sentence, keyword):
 @respond_to(u"(.*?(找誰處理))")
 def zm_dispatch(message, sentence, keyword):
     reply = "doreen 安排一下"
+    formatted_reply(message, reply)
+
+@respond_to(u"(.*?(my ip))")
+def zm_office_ip(message, sentence, keyword):
+    reply = "Your office eth0 ip address: {}".format(get_ip_address("eth0"))
     formatted_reply(message, reply)
 
 # @listen_to(u"abc|中文")
